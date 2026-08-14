@@ -1,0 +1,23 @@
+# ========== 依赖 ==========
+node_modules/
+android/node_modules/
+
+# ========== 构建产物（由 cap sync / gradle 生成） ==========
+android/android/app/build/
+android/android/.gradle/
+android/android/app/src/main/assets/public/
+www/
+
+# ========== 本地日志 ==========
+*.log
+build_run*.log
+
+# ========== 私密记忆（不公开） ==========
+.workbuddy/
+
+# ========== APK 二进制（走 GitHub Releases，不入库） ==========
+android/release/*.apk
+
+# ========== 系统 ==========
+.DS_Store
+Thumbs.db

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#f7f8fa">
+  <title>脑力训练</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon/apple-touch-icon.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- 首页 - 游戏选择 -->
+  <div id="page-home" class="page active">
+    <div class="header">
+      <div class="header-icon"></div>
+      <h1>脑力训练</h1>
+      <p class="header-sub">每日一点，大脑更灵活</p>
+    </div>
+
+    <div class="game-grid">
+      <div class="game-card" data-game="schulte">
+        <div class="game-card-icon"></div>
+        <div class="game-card-title">舒尔特方格</div>
+        <div class="game-card-desc">注意力 · 视觉搜索</div>
+      </div>
+      <div class="game-card" data-game="cancellation">
+        <div class="game-card-icon"></div>
+        <div class="game-card-title">数字划消</div>
+        <div class="game-card-desc">持续性注意</div>
+      </div>
+      <div class="game-card" data-game="memory">
+        <div class="game-card-icon"></div>
+        <div class="game-card-title">翻牌配对</div>
+        <div class="game-card-desc">工作记忆</div>
+      </div>
+      <div class="game-card" data-game="trail">
+        <div class="game-card-icon"></div>
+        <div class="game-card-title">连线游戏</div>
+        <div class="game-card-desc">执行功能</div>
+      </div>
+      <div class="game-card" data-game="difference">
+        <div class="game-card-icon"></div>
+        <div class="game-card-title">找不同</div>
+        <div class="game-card-desc">视觉分辨</div>
+      </div>
+      <div class="game-card records-card" id="open-records" data-action="records">
+        <div class="game-card-icon records-card-icon"></div>
+        <div class="game-card-title">我的记录</div>
+        <div class="game-card-desc">成绩 · 排行</div>
+      </div>
+    </div>
+
+    <div class="home-footer">
+      <p class="footer-text">为奶奶设计的认知训练小游戏 <span class="footer-heart"></span></p>
+    </div>
+  </div>
+
+  <!-- 游戏页面容器 -->
+  <div id="page-game" class="page">
+    <div class="game-header">
+      <button class="back-btn" id="back-btn">← 返回</button>
+      <h2 id="game-title">游戏标题</h2>
+      <div class="header-spacer"></div>
+    </div>
+
+    <!-- 难度选择 -->
+    <div id="difficulty-panel" class="panel">
+      <h3>选择难度</h3>
+      <p class="diff-tip">点一下难度，马上开始</p>
+      <div class="difficulty-options">
+        <button class="diff-btn" data-diff="easy">简单</button>
+        <button class="diff-btn" data-diff="medium">中等</button>
+        <button class="diff-btn" data-diff="hard">困难</button>
+      </div>
+
+      <!-- 训练科普面板（难度页下方空位） -->
+      <div id="game-science" class="game-science">
+        <div class="science-head">
+          <span class="science-tag" id="science-tag">训练科普</span>
+          <span class="science-trains" id="science-trains"></span>
+        </div>
+        <div class="science-block">
+          <span class="science-label">方案来源</span>
+          <p id="science-scientist"></p>
+        </div>
+        <div class="science-block">
+          <span class="science-label">锻炼原理</span>
+          <p id="science-principle"></p>
+        </div>
+        <p class="science-note">温馨提示：以上为日常脑力锻炼的辅助训练，不能替代医学治疗，但每天动一动大脑总是好的。</p>
+      </div>
+    </div>
+
+    <!-- 游戏信息栏 -->
+    <div id="game-info-bar" class="info-bar hidden">
+      <div class="info-item">
+        <span class="info-label">用时</span>
+        <span class="info-value" id="timer">00:00</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">最佳</span>
+        <span class="info-value" id="best-time">--:--</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">目标</span>
+        <span class="info-value" id="target-hint">按顺序点击</span>
+      </div>
+    </div>
+
+    <!-- 游戏画布区域 -->
+    <div id="game-canvas" class="game-canvas"></div>
+
+    <!-- 操作按钮区 -->
+    <div id="game-controls" class="game-controls hidden">
+      <button class="action-btn secondary" id="restart-btn">重新开始</button>
+    </div>
+  </div>
+
+  <!-- 完成弹窗 -->
+  <div id="complete-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-emoji"></div>
+      <h3 id="modal-title">太棒了！</h3>
+      <p id="modal-message">你完成了本次训练</p>
+      <div class="modal-stats">
+        <div class="stat-row">
+          <span>用时</span>
+          <span id="modal-time" class="stat-highlight">00:00</span>
+        </div>
+        <div class="stat-row">
+          <span>最佳记录</span>
+          <span id="modal-best">00:00</span>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="action-btn secondary" id="modal-retry">再来一次</button>
+        <button class="action-btn primary" id="modal-home">返回首页</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 我的记录（个人排行） -->
+  <div id="page-records" class="page">
+    <div class="game-header">
+      <button class="back-btn" id="records-back">← 返回</button>
+      <h2>我的记录</h2>
+      <div class="header-spacer"></div>
+    </div>
+
+    <div class="records-summary">
+      <div class="rec-card">
+        <span class="rec-num" id="rec-total">0</span>
+        <span class="rec-label">总训练次数</span>
+      </div>
+      <div class="rec-card">
+        <span class="rec-num" id="rec-days">0</span>
+        <span class="rec-label">坚持天数</span>
+      </div>
+    </div>
+
+    <h3 class="records-title">个人最佳</h3>
+    <div id="records-best" class="records-best"></div>
+
+    <h3 class="records-title">最近记录</h3>
+    <div id="records-list" class="records-list"></div>
+    <p class="records-empty" id="records-empty">还没有记录，去玩一局吧！</p>
+  </div>
+
+  <script src="js/games/schulte.js"></script>
+  <script src="js/games/cancellation.js"></script>
+  <script src="js/games/memory.js"></script>
+  <script src="js/games/trail.js"></script>
+  <script src="js/games/difference.js"></script>
+  <script src="js/icons.js"></script>
+  <script src="js/science.js"></script>
+  <script src="js/lib/sql-wasm.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    // 注入统一 SVG 图标，替换 emoji（单一图标来源：js/icons.js）
+    (function () {
+      if (!window.Icons) return;
+      var hi = document.querySelector('.header-icon');
+      if (hi) hi.innerHTML = window.Icons.brain;
+      var me = document.querySelector('.modal-emoji');
+      if (me) me.innerHTML = window.Icons.celebrate;
+      var fh = document.querySelector('.footer-heart');
+      if (fh) fh.innerHTML = window.Icons.heart;
+      document.querySelectorAll('.game-card').forEach(function (c) {
+        var el = c.querySelector('.game-card-icon');
+        if (!el) return;
+        if (c.classList.contains('records-card')) {
+          if (window.Icons.records) el.innerHTML = window.Icons.records;
+          return;
+        }
+        var g = c.dataset.game;
+        if (el && g && window.Icons.home[g]) el.innerHTML = window.Icons.home[g];
+      });
+    })();
+  </script>
+
+  <!-- PWA：仅浏览器环境注册 Service Worker（Capacitor 原生 App 内跳过） -->
+  <script>
+    if (!window.Capacitor && 'serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function () {});
+      });
+    }
+  </script>
+</body>
+</html>

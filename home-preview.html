@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>首页高度预览</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { margin:0; background:#2b2f36; font-family: sans-serif; display:flex; justify-content:center; align-items:flex-start; padding:24px; gap:20px; }
+    .phone {
+      width: 375px; height: 667px; background: var(--bg);
+      overflow: auto; border-radius: 30px;
+      box-shadow: 0 12px 44px rgba(0,0,0,.45);
+      border: 6px solid #111;
+      flex: 0 0 auto;
+    }
+    /* 强制首页在预览框内可见 */
+    .phone #page-home { display: flex !important; }
+    .readout { color:#dfe3e8; font-size:13px; line-height:1.9; align-self:center; max-width: 240px; }
+    .readout b { color:#ffd479; font-size:15px; }
+    .readout .ok { color:#7ee0a0; }
+    .readout .warn { color:#ff9a76; }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <div id="page-home" class="page active">
+      <div class="header">
+        <div class="header-icon"></div>
+        <h1>脑力训练</h1>
+        <p class="header-sub">每日一点，大脑更灵活</p>
+      </div>
+
+      <div class="game-grid">
+        <div class="game-card" data-game="schulte">
+          <div class="game-card-icon"></div>
+          <div class="game-card-title">舒尔特方格</div>
+          <div class="game-card-desc">注意力 · 视觉搜索</div>
+        </div>
+        <div class="game-card" data-game="cancellation">
+          <div class="game-card-icon"></div>
+          <div class="game-card-title">数字划消</div>
+          <div class="game-card-desc">持续性注意</div>
+        </div>
+        <div class="game-card" data-game="memory">
+          <div class="game-card-icon"></div>
+          <div class="game-card-title">翻牌配对</div>
+          <div class="game-card-desc">工作记忆</div>
+        </div>
+        <div class="game-card" data-game="trail">
+          <div class="game-card-icon"></div>
+          <div class="game-card-title">连线游戏</div>
+          <div class="game-card-desc">执行功能</div>
+        </div>
+        <div class="game-card" data-game="difference">
+          <div class="game-card-icon"></div>
+          <div class="game-card-title">找不同</div>
+          <div class="game-card-desc">视觉分辨</div>
+        </div>
+        <div class="game-card records-card" id="open-records" data-action="records">
+          <div class="game-card-icon records-card-icon"></div>
+          <div class="game-card-title">我的记录</div>
+          <div class="game-card-desc">成绩 · 排行</div>
+        </div>
+      </div>
+
+      <div class="home-footer">
+        <p class="footer-text">为奶奶设计的认知训练小游戏 <span class="footer-heart"></span></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="readout" id="readout"></div>
+
+  <script src="js/icons.js"></script>
+  <script>
+    (function () {
+      if (!window.Icons) return;
+      var hi = document.querySelector('.header-icon');
+      if (hi) hi.innerHTML = window.Icons.brain;
+      var fh = document.querySelector('.footer-heart');
+      if (fh) fh.innerHTML = window.Icons.heart;
+      document.querySelectorAll('.game-card').forEach(function (c) {
+        var el = c.querySelector('.game-card-icon');
+        if (!el) return;
+        if (c.classList.contains('records-card')) {
+          if (window.Icons.records) el.innerHTML = window.Icons.records;
+          return;
+        }
+        var g = c.dataset.game;
+        if (el && g && window.Icons.home[g]) el.innerHTML = window.Icons.home[g];
+      });
+    })();
+
+    var ph = document.getElementById('page-home');
+    var VH = 667, VW = 375;
+    var contentH = ph.scrollHeight;
+    var contentW = ph.scrollWidth;
+    var r = document.getElementById('readout');
+    var fit = contentH <= VH;
+    r.innerHTML =
+      '模拟机型: iPhone SE / 多数安卓<br>' +
+      '视口宽度: <b>' + VW + 'px</b><br>' +
+      '视口高度: <b>' + VH + 'px</b><br><br>' +
+      '首页实际内容高: <b>' + contentH + 'px</b><br>' +
+      '首页实际内容宽: <b>' + contentW + 'px</b><br><br>' +
+      (fit
+        ? '<span class="ok">✅ 单屏内可见，无需滚动</span>'
+        : '<span class="warn">⚠️ 超出 ' + (contentH - VH) + 'px，需向下滚动</span>');
+  </script>
+</body>
+</html>

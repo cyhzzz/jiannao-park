@@ -1,0 +1,331 @@
+# Capacitor sync 后自动 patch 脚本
+# 用法：npx cap sync android 后运行此脚本
+# 作用：
+#   1. AndroidManifest.xml 加 screenOrientation=portrait（竖屏，适合老人单手点按）
+#   1b. AndroidManifest.xml 加 largeHeap=true（v3.5.4：移动端同步需要大内存）
+#   2. 从 icon/LOGO.png 生成各尺寸 ic_launcher 图标
+#   3. patch 插件 build.gradle 的 JDK 21 → 17
+#   4. 确认 strings.xml 中 app_name 为"省心投"（非"省心投 BI"）
+#   4b. styles.xml 加 windowFullscreen（全屏沉浸式，隐藏状态栏）
+#   5. settings.gradle 加阿里云镜像（国内网络无法直连 maven.apache.org）
+#   6. gradle.properties 加 in-process kotlin + 关闭 daemon（避免 TRAE Sandbox 拦截 ~/.kotlin）
+#   7. gradle-wrapper.properties 改腾讯云镜像（services.gradle.org 超时）
+#   8. 内置 DB 打包进 APK assets（public/assets/databases/shengxintouSQLite.db）
+#   9. APK 打包后复制到 android/release/（shengxintou-vX.Y.Z.apk）
+#
+# 注意：PowerShell 5.1 的 Set-Content -Encoding UTF8 会写 BOM，
+# Gradle 不支持 BOM，必须用 [System.IO.File]::WriteAllText 写无 BOM 的 UTF-8
+
+$ErrorActionPreference = "Stop"
+$androidNativeDir = Join-Path $PSScriptRoot "..\android"
+$manifestPath = Join-Path $androidNativeDir "app\src\main\AndroidManifest.xml"
+$stringsPath = Join-Path $androidNativeDir "app\src\main\res\values\strings.xml"
+
+# 无 BOM UTF-8 写文件
+function Write-FileNoBom([string]$path, [string]$content) {
+    $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+    [System.IO.File]::WriteAllText($path, $content, $utf8NoBom)
+}
+
+# 无 BOM UTF-8 读文件
+function Read-FileNoBom([string]$path) {
+    return [System.IO.File]::ReadAllText($path, [System.Text.Encoding]::UTF8)
+}
+
+# ========== 1. AndroidManifest.xml 强制竖屏 ==========
+if (Test-Path $manifestPath) {
+    $manifest = Read-FileNoBom $manifestPath
+    $changed = $false
+    if ($manifest -match 'android:screenOrientation="landscape"') {
+        $manifest = $manifest -replace 'android:screenOrientation="landscape"', 'android:screenOrientation="portrait"'
+        $changed = $true
+    } elseif ($manifest -notmatch 'android:screenOrientation') {
+        $manifest = $manifest -replace 'android:launchMode="singleTask"', 'android:launchMode="singleTask"`n            android:screenOrientation="portrait"'
+        $changed = $true
+    }
+    if ($changed) {
+        Write-FileNoBom $manifestPath $manifest
+        Write-Output "[patch] AndroidManifest.xml: screenOrientation -> portrait"
+    } else {
+        Write-Output "[skip] AndroidManifest.xml: screenOrientation already portrait"
+    }
+}
+
+# ========== 1b. AndroidManifest.xml 加 largeHeap ==========
+# v3.5.4：移动端同步下载 30+ MB SQLite 备份 → base64 后 50+ MB，
+#         WebView 默认堆内存不足会 OOM 崩溃，必须启用 largeHeap
+if (Test-Path $manifestPath) {
+    $manifest = Read-FileNoBom $manifestPath
+    if ($manifest -notmatch 'android:largeHeap') {
+        # 在 android:theme="@style/AppTheme" 后插入 android:largeHeap="true"
+        # 用字符串操作避免 PowerShell -replace 中的引号/反引号转义问题
+        $marker = 'android:theme="@style/AppTheme"'
+        $insertText = "`n        android:largeHeap=`"true`""
+        $idx = $manifest.IndexOf($marker)
+        if ($idx -ge 0) {
+            $insertPos = $idx + $marker.Length
+            $manifest = $manifest.Substring(0, $insertPos) + $insertText + $manifest.Substring($insertPos)
+            Write-FileNoBom $manifestPath $manifest
+            Write-Output "[patch] AndroidManifest.xml: added largeHeap=true"
+        } else {
+            Write-Output "[warn] AndroidManifest.xml: marker 'android:theme' not found, cannot inject largeHeap"
+        }
+    } else {
+        Write-Output "[skip] AndroidManifest.xml: largeHeap already set"
+    }
+}
+
+# ========== 2. 生成 ic_launcher 图标（调用独立脚本）==========
+$genIconsScript = Join-Path $PSScriptRoot "generate-icons.ps1"
+if (Test-Path $genIconsScript) {
+    & powershell -ExecutionPolicy Bypass -File $genIconsScript
+    Write-Output "[patch] ic_launcher icons: regenerated"
+} else {
+    Write-Output "[skip] generate-icons.ps1 not found"
+}
+
+# ========== 3. patch JDK 21 → 17 ==========
+$gradleFiles = @(
+    "app\capacitor.build.gradle"
+    "node_modules\@capacitor-community\sqlite\android\build.gradle"
+    "node_modules\@capacitor\android\capacitor\build.gradle"
+    "node_modules\@capacitor\preferences\android\build.gradle"
+    "node_modules\@capacitor\status-bar\android\build.gradle"
+    "node_modules\@capacitor\filesystem\android\build.gradle"
+)
+foreach ($rel in $gradleFiles) {
+    $f = Join-Path $androidNativeDir $rel
+    if (Test-Path $f) {
+        $content = Read-FileNoBom $f
+        $changed = $false
+        if ($content -match 'VERSION_21') {
+            $content = $content -replace 'JavaVersion\.VERSION_21', 'JavaVersion.VERSION_17'
+            $changed = $true
+        }
+        if ($content -match 'jvmToolchain\(21\)') {
+            $content = $content -replace 'jvmToolchain\(21\)', 'jvmToolchain(17)'
+            $changed = $true
+        }
+        if ($changed) {
+            Write-FileNoBom $f $content
+            Write-Output "[patch] $rel : JDK 21 -> 17"
+        }
+    }
+}
+
+# ========== 4. 校验 strings.xml 应用名/包名 = "健脑乐园" / com.jiannao.brain ==========
+# Capacitor sync 会用 capacitor.config.ts 的 appName 覆盖 strings.xml，
+# 但启动 Activity 的 label 取 title_activity_main，需一并改；包名也需同步
+if (Test-Path $stringsPath) {
+    $strings = Read-FileNoBom $stringsPath
+    $changed = $false
+    if ($strings -notmatch '<string name="app_name">健脑乐园</string>') {
+        $strings = $strings -replace '<string name="app_name">[^<]+</string>', '<string name="app_name">健脑乐园</string>'
+        $changed = $true
+    }
+    if ($strings -notmatch '<string name="title_activity_main">健脑乐园</string>') {
+        $strings = $strings -replace '<string name="title_activity_main">[^<]+</string>', '<string name="title_activity_main">健脑乐园</string>'
+        $changed = $true
+    }
+    if ($strings -notmatch 'com\.jiannao\.brain') {
+        $strings = $strings -replace '<string name="package_name">[^<]+</string>', '<string name="package_name">com.jiannao.brain</string>'
+        $strings = $strings -replace '<string name="custom_url_scheme">[^<]+</string>', '<string name="custom_url_scheme">com.jiannao.brain</string>'
+        $changed = $true
+    }
+    if ($changed) {
+        Write-FileNoBom $stringsPath $strings
+        Write-Output "[patch] strings.xml: app_name/title/package -> 健脑乐园 / com.jiannao.brain"
+    } else {
+        Write-Output "[skip] strings.xml: app name & package already correct"
+    }
+}
+
+# ========== 4b. styles.xml 加全屏沉浸式主题 ==========
+# v3.5.3：cap sync 会覆盖 styles.xml，需重新注入 windowFullscreen
+$stylesPath = Join-Path $androidNativeDir "app\src\main\res\values\styles.xml"
+if (Test-Path $stylesPath) {
+    $styles = Read-FileNoBom $stylesPath
+    if ($styles -notmatch 'android:windowFullscreen') {
+        # 在 AppTheme.NoActionBarLaunch 的 </style> 前插入全屏属性
+        if ($styles -match '(<style name="AppTheme\.NoActionBarLaunch"[^>]*>)([\s\S]*?)</style>') {
+            $newInner = "`n        <item name=`"android:windowFullscreen`">true</item>`n        <item name=`"android:windowNoTitle`">true</item>`n    "
+            $styles = $styles -replace '(<style name="AppTheme\.NoActionBarLaunch"[^>]*>)([\s\S]*?)</style>', "`$1$newInner</style>"
+            Write-FileNoBom $stylesPath $styles
+            Write-Output "[patch] styles.xml: windowFullscreen added to AppTheme.NoActionBarLaunch"
+        }
+    } else {
+        Write-Output "[skip] styles.xml: windowFullscreen already set"
+    }
+}
+
+# ========== 5. settings.gradle 注入阿里云镜像 ==========
+# v3.5.3：国内网络无法访问 maven.apache.org / plugins.gradle.org
+#         每次 cap sync 会重新生成 settings.gradle，必须重新注入镜像
+$settingsPath = Join-Path $androidNativeDir "settings.gradle"
+if (Test-Path $settingsPath) {
+    $settings = Read-FileNoBom $settingsPath
+    if ($settings -notmatch 'maven.aliyun.com') {
+        $aliyunBlock = @"
+pluginManagement {
+    repositories {
+        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+}
+
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.9.0'
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
+        google()
+        mavenCentral()
+    }
+}
+
+"@
+        # 保留 include 行和后续内容
+        $includePart = ($settings -split "(?m)^include ':app'")[1]
+        if ($includePart) {
+            $newContent = $aliyunBlock + "include ':app'" + $includePart
+        } else {
+            # 兜底：直接在 plugins 块前插入 pluginManagement 和 dependencyResolutionManagement
+            $newContent = $aliyunBlock + $settings
+        }
+        Write-FileNoBom $settingsPath $newContent
+        Write-Output "[patch] settings.gradle: aliyun mirrors injected"
+    } else {
+        Write-Output "[skip] settings.gradle: aliyun mirrors already present"
+    }
+}
+
+# ========== 6. gradle.properties 注入 in-process kotlin + 关闭 daemon ==========
+# v3.5.3：TRAE Sandbox 会拦截 C:\Users\<user>\AppData\Local\kotlin 写入
+#         Kotlin 编译器改 in-process 模式（不单独启动 Kotlin daemon）
+$gradlePropsPath = Join-Path $androidNativeDir "gradle.properties"
+if (Test-Path $gradlePropsPath) {
+    $props = Read-FileNoBom $gradlePropsPath
+    $changed = $false
+    if ($props -notmatch 'kotlin.compiler.execution.strategy') {
+        $props = $props + "`nkotlin.compiler.execution.strategy=in-process`nkotlin.daemon.jvmargs=-Xmx1536m -Dfile.encoding=UTF-8`norg.gradle.daemon=false`norg.gradle.configuration-cache=false`n"
+        $changed = $true
+    }
+    if ($changed) {
+        Write-FileNoBom $gradlePropsPath $props
+        Write-Output "[patch] gradle.properties: in-process kotlin + daemon disabled"
+    } else {
+        Write-Output "[skip] gradle.properties: in-process kotlin already set"
+    }
+}
+
+# ========== 7. gradle-wrapper.properties 改腾讯云镜像 ==========
+# v3.5.3：services.gradle.org 在国内网络超时
+$wrapperPropsPath = Join-Path $androidNativeDir "gradle\wrapper\gradle-wrapper.properties"
+if (Test-Path $wrapperPropsPath) {
+    $wrapper = Read-FileNoBom $wrapperPropsPath
+    $changed = $false
+    if ($wrapper -match 'services.gradle.org/distributions') {
+        $wrapper = $wrapper -replace 'https://services.gradle.org/distributions/', 'https://mirrors.cloud.tencent.com/gradle/'
+        $changed = $true
+    }
+    if ($wrapper -match 'networkTimeout=10000') {
+        $wrapper = $wrapper -replace 'networkTimeout=10000', 'networkTimeout=120000'
+        $changed = $true
+    }
+    if ($wrapper -match 'validateDistributionUrl=true') {
+        $wrapper = $wrapper -replace 'validateDistributionUrl=true', 'validateDistributionUrl=false'
+        $changed = $true
+    }
+    if ($changed) {
+        Write-FileNoBom $wrapperPropsPath $wrapper
+        Write-Output "[patch] gradle-wrapper.properties: tencent mirror + timeout 120s"
+    } else {
+        Write-Output "[skip] gradle-wrapper.properties: tencent mirror already set"
+    }
+}
+
+# ========== 8. 内置 DB 打包进 APK assets ==========
+# v3.5.3：SQLite 插件 UtilsFile.java 期望路径为 public/assets/databases/
+#         从 database/shengxintou.db 复制到 APK assets 最终位置 + Vite public 目录
+#         首次启动时 copyFromAssets(false) 即可初始化本地 DB
+$sourceDb = Join-Path $PSScriptRoot "..\..\database\shengxintou.db"
+if (-not (Test-Path $sourceDb)) {
+    # 兜底：从 frontend-react/public 旧位置取
+    $sourceDb = Join-Path $PSScriptRoot "..\..\frontend-react\public\databases\shengxintouSQLite.db"
+}
+if (Test-Path $sourceDb) {
+    # APK assets 最终位置（cap sync 后 dist 内容已复制到此，再补 DB）
+    $apkAssetsDir = Join-Path $androidNativeDir "app\src\main\assets\public\assets\databases"
+    New-Item -ItemType Directory -Force -Path $apkAssetsDir | Out-Null
+    $apkDst = Join-Path $apkAssetsDir "shengxintouSQLite.db"
+    Copy-Item -Path $sourceDb -Destination $apkDst -Force
+    $sizeMB = [math]::Round((Get-Item $apkDst).Length / 1MB, 2)
+    Write-Output "[patch] APK assets DB: $apkDst ($sizeMB MB)"
+
+    # 同步到 Vite public 目录，让下次 npm run build 也包含
+    $vitePublicDir = Join-Path $PSScriptRoot "..\..\frontend-react\public\assets\databases"
+    New-Item -ItemType Directory -Force -Path $vitePublicDir | Out-Null
+    $viteDst = Join-Path $vitePublicDir "shengxintouSQLite.db"
+    Copy-Item -Path $sourceDb -Destination $viteDst -Force
+    Write-Output "[patch] Vite public DB: $viteDst"
+
+    # 清理旧位置（避免重复打包）
+    $oldPublicDb = Join-Path $PSScriptRoot "..\..\frontend-react\public\databases\shengxintouSQLite.db"
+    if ((Test-Path $oldPublicDb) -and ($oldPublicDb -ne $sourceDb)) {
+        Remove-Item $oldPublicDb -Force
+        Write-Output "[patch] removed old public/databases/shengxintouSQLite.db"
+    }
+} else {
+    Write-Output "[warn] source DB not found: database/shengxintou.db — 内置 DB 不会打包"
+}
+
+Write-Output "[done] post-sync-patch complete"
+
+# ========== 9. 打包后复制 APK（shengxintou 命名） ==========
+# build.gradle 中 outputFileName 用 ASCII（shengxintou-vX.Y.Z.apk），
+# 打包完成后由本函数复制到 android/release/，保持 shengxintou 拼音命名
+# v3.5.3：改用 assembleDebug（debug keystore 自动签名），默认搜 debug 目录
+# 此函数不在 sync 时调用，而是由 build 脚本在 assembleDebug 后调用
+function Rename-ApkToChinese {
+    param([string]$ApkDir = "")
+    # 优先 debug 目录（v3.5.3 起用 debug 签名），兜底 release 目录
+    $debugDir = Join-Path $androidNativeDir "app\build\outputs\apk\debug"
+    $releaseDir = Join-Path $androidNativeDir "app\build\outputs\apk\release"
+    if (-not $ApkDir) {
+        if (Test-Path $debugDir) {
+            $ApkDir = $debugDir
+        } else {
+            $ApkDir = $releaseDir
+        }
+    }
+    if (-not (Test-Path $ApkDir)) {
+        Write-Output "[skip] Rename-ApkToChinese: apk dir not found"
+        return
+    }
+    $apk = Get-ChildItem -Path $ApkDir -Filter "shengxintou-v*.apk" -Recurse | Select-Object -First 1
+    if (-not $apk) {
+        # 兜底：app-debug.apk
+        $apk = Get-ChildItem -Path $ApkDir -Filter "app-debug.apk" -Recurse | Select-Object -First 1
+    }
+    if (-not $apk) {
+        Write-Output "[skip] Rename-ApkToChinese: shengxintou-v*.apk not found"
+        return
+    }
+    $newName = $apk.Name -replace '^app-debug', 'shengxintou-debug'
+    # 复制到 android/release/（项目约定输出位置）
+    $releaseOutDir = Join-Path $PSScriptRoot "..\release"
+    New-Item -ItemType Directory -Force -Path $releaseOutDir | Out-Null
+    $finalPath = Join-Path $releaseOutDir $newName
+    Copy-Item -Path $apk.FullName -Destination $finalPath -Force
+    $sizeMB = [math]::Round((Get-Item $finalPath).Length / 1MB, 2)
+    Write-Output "[done] APK copied: $($apk.Name) -> $finalPath ($sizeMB MB)"
+}

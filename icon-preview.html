@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>健脑乐园 · 图标系统预览</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:"PingFang SC","Microsoft YaHei",sans-serif; }
+  body { background:#f4f6f9; color:#2b2f36; padding:28px 18px 60px; }
+  .wrap { max-width:760px; margin:0 auto; }
+  h1 { font-size:26px; font-weight:700; }
+  .sub { color:#8a93a0; font-size:14px; margin:6px 0 24px; }
+  h2 { font-size:18px; font-weight:700; margin:34px 0 14px; padding-left:12px; border-left:4px solid #4a90d9; }
+  .note { color:#8a93a0; font-size:13px; margin-bottom:14px; }
+
+  /* 启动图标 */
+  .logo-row { display:flex; gap:22px; align-items:flex-end; flex-wrap:wrap; }
+  .logo-item { text-align:center; }
+  .logo-item img { display:block; box-shadow:0 10px 26px rgba(40,60,90,.16); }
+  .logo-item .cap { font-size:12px; color:#8a93a0; margin-top:8px; }
+
+  /* 首页卡片 */
+  .grid5 { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
+  .card { background:#fff; border-radius:20px; padding:18px 8px; box-shadow:0 4px 18px rgba(40,60,90,.08);
+          display:flex; flex-direction:column; align-items:center; text-align:center; }
+  .card .ic { width:58px; height:58px; }
+  .card .ic svg { width:100%; height:100%; display:block; }
+  .card .t { font-size:13px; font-weight:700; margin-top:8px; }
+
+  /* 16 图案 */
+  .grid16 { display:grid; grid-template-columns:repeat(8,1fr); gap:10px; }
+  .cell { background:#fff; border-radius:14px; aspect-ratio:1/1; box-shadow:0 4px 18px rgba(40,60,90,.08);
+          display:flex; align-items:center; justify-content:center; }
+  .cell .g { width:84%; height:84%; }
+  .cell .g svg { width:100%; height:100%; display:block; }
+
+  .grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; max-width:340px; }
+  @media (max-width:640px){ .grid5{grid-template-columns:repeat(3,1fr);} .grid16{grid-template-columns:repeat(4,1fr);} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>健脑乐园 · 图标系统预览</h1>
+  <p class="sub">柔润软陶 v2 · 浅色柔角底板 + 内部柔光 + 底部暖影；适老高对比，靠形状辨识</p>
+
+  <h2>启动图标</h2>
+  <p class="note">清晰脑形（左右脑叶+脑回褶皱）+ 顶部绿芽 + 柔光 + 软投影；方形全幅 / 圆角 / 圆形三变体</p>
+  <div class="logo-row">
+    <div class="logo-item"><img src="icon/LOGO.png" width="180" height="180" alt="rounded"><div class="cap">LOGO.png（圆角）</div></div>
+    <div class="logo-item"><img src="icon/LOGO_square.png" width="150" height="150" alt="square"><div class="cap">方形全幅 → ic_launcher</div></div>
+    <div class="logo-item"><img src="icon/LOGO_round.png" width="150" height="150" alt="round"><div class="cap">圆形 → ic_launcher_round</div></div>
+  </div>
+
+  <h2>首页游戏图标</h2>
+  <div class="grid5" id="homeGrid"></div>
+
+  <h2>翻牌配对 · 16 图案</h2>
+  <p class="note">每枚落在同色系浅色底板上，剪影各异，记忆配对靠形状区分</p>
+  <div class="grid16" id="glyphGrid"></div>
+
+  <h2>头部 / 弹窗 / 页脚</h2>
+  <div class="grid3" id="miscGrid"></div>
+</div>
+
+<script src="js/icons.js"></script>
+<script>
+(function(){
+  const names = { schulte:'舒尔特方格', cancellation:'数字划消', memory:'翻牌配对', trail:'连线游戏', difference:'找不同' };
+  const homeGrid = document.getElementById('homeGrid');
+  Object.keys(names).forEach(k=>{
+    const el = document.createElement('div'); el.className='card';
+    el.innerHTML = `<div class="ic">${window.Icons.home[k]}</div><div class="t">${names[k]}</div>`;
+    homeGrid.appendChild(el);
+  });
+  const glyphGrid = document.getElementById('glyphGrid');
+  window.Icons.memorySet.forEach(n=>{
+    const el = document.createElement('div'); el.className='cell';
+    el.innerHTML = `<div class="g">${window.Icons.memoryGlyph(n)}</div>`;
+    glyphGrid.appendChild(el);
+  });
+  const misc = document.getElementById('miscGrid');
+  [['brain','头部·脑形'],['celebrate','弹窗·奖杯'],['heart','页脚·爱心']].forEach(([k,c])=>{
+    const el = document.createElement('div'); el.className='card';
+    el.innerHTML = `<div class="ic">${window.Icons[k]}</div><div class="t">${c}</div>`;
+    misc.appendChild(el);
+  });
+})();
+</script>
+</body>
+</html>

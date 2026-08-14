@@ -1,0 +1,12 @@
+{
+  "project_spec/glossary.md": "b5394894711a10b47911b5ecda6cf84c816057d597b263681141f603eca92930",
+  "project_spec/modules/android-wrapper.md": "56f13609a937ba6aa4a4590c406e74e2342eb66d16f291d2791f0e4a7596faa3",
+  "project_spec/modules/web-app.md": "8294d20001929517f816f26e4193461a26fc9a8b9943808cdf22935551325b95",
+  "project_spec/overview.md": "d97b091615f96ef995b67bc9f3a533608519345b2bf473f6279eb3daa90375be",
+  "project_spec/red_lines.md": "5734f2ed08f6dfa002902eaaa6060594b911e97a1b08cd48cf864433e57fc8fb",
+  "project_spec/templates/tech_spec_template.md": "6b600e0ca9adbdf2c26b79e4ffa2d3f931b38166cf00c244bb6b2cee73ccd392",
+  "project_spec/ui_components_wiki.md": "8cd2e693e9bc7eb1b37de266f6b2b379676a6d9be3aa44a995167861b1ab462a",
+  "project_spec/workflows/bug_fix.md": "a521c1c6c87f896f2b17719f2e6e0c0b1989cf2c0526024252e7a6b8f7eb9712",
+  "project_spec/workflows/incremental.md": "4b92e40b654bff8bdf9e1a7de5bac4b7dbd03dea6d63b2357cdbd74eb922563f",
+  "project_spec/workflows/new_feature.md": "91fc107ce56b855682fc0c27032112907838a1e37db46f97f04217213fd1b8a8"
+}

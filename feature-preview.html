@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>功能预览 · 记录与科普</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { background: #eef2f7; padding: 24px; }
+    .preview-wrap { max-width: 560px; margin: 0 auto; }
+    .preview-title { text-align: center; font-size: 20px; color: #2b2f36; margin: 8px 0 20px; font-weight: 700; }
+    .screen { background: #fff; border-radius: 22px; padding: 22px; box-shadow: 0 6px 20px rgba(40,60,90,.07); margin-bottom: 28px; }
+    .screen h4 { margin: 0 0 14px; color: #4a90d9; font-size: 16px; }
+    /* 让 preview 内的 .page 类表现得像普通块，便于审阅 */
+    .page { display: block !important; height: auto !important; overflow: visible !important; padding: 0 !important; }
+    .records-summary, .records-best, .records-list { margin-bottom: 16px; }
+    .rec-best-row, .rec-item { font-size: 15px; }
+  </style>
+</head>
+<body>
+  <div class="preview-wrap">
+    <div class="preview-title">健脑乐园 · 新增功能预览</div>
+
+    <!-- 1) 难度选择页 + 训练科普面板 -->
+    <div class="screen">
+      <h4>① 难度选择页（下方新增训练科普）</h4>
+      <div class="page">
+        <div id="difficulty-panel" class="panel">
+          <h3>选择难度</h3>
+          <p class="diff-tip">点一下难度，马上开始</p>
+          <div class="difficulty-options">
+            <button class="diff-btn" data-diff="easy">简单</button>
+            <button class="diff-btn selected" data-diff="medium">中等</button>
+            <button class="diff-btn" data-diff="hard">困难</button>
+          </div>
+          <div id="game-science" class="game-science">
+            <div class="science-head">
+              <span class="science-tag" id="science-tag">翻牌配对</span>
+              <span class="science-trains" id="science-trains">工作记忆 · 视觉记忆</span>
+            </div>
+            <div class="science-block">
+              <span class="science-label">方案来源</span>
+              <p id="science-scientist">基于艾伦·巴德利（Alan Baddeley）与格雷厄姆·希奇（Graham Hitch）1974 年提出、后经多次修订的工作记忆模型。</p>
+            </div>
+            <div class="science-block">
+              <span class="science-label">锻炼原理</span>
+              <p id="science-principle">翻开卡片记住位置、再找出相同的一对，需要大脑暂时保存并操作视觉信息——这正是工作记忆的核心。练习可增强短期信息的保持与提取。</p>
+            </div>
+            <p class="science-note">温馨提示：以上为日常脑力锻炼的辅助训练，不能替代医学治疗，但每天动一动大脑总是好的。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2) 我的记录页 -->
+    <div class="screen">
+      <h4>② 我的记录（个人排行）</h4>
+      <div class="page">
+        <div class="records-summary">
+          <div class="rec-card"><span class="rec-num">12</span><span class="rec-label">总训练次数</span></div>
+          <div class="rec-card"><span class="rec-num">5</span><span class="rec-label">坚持天数</span></div>
+        </div>
+        <h3 class="records-title">个人最佳</h3>
+        <div class="records-best">
+          <div class="rec-best-row"><span class="rec-best-game">舒尔特方格</span><span class="rec-best-diff">简单</span><span class="rec-best-time">00:08</span></div>
+          <div class="rec-best-row"><span class="rec-best-game">翻牌配对</span><span class="rec-best-diff">中等</span><span class="rec-best-time">00:28</span></div>
+          <div class="rec-best-row"><span class="rec-best-game">连线游戏</span><span class="rec-best-diff">困难</span><span class="rec-best-time">00:45</span></div>
+        </div>
+        <h3 class="records-title">最近记录</h3>
+        <div class="records-list">
+          <div class="rec-item"><span class="rec-item-game">翻牌配对</span><span class="rec-item-diff">中等</span><span class="rec-item-time">00:28</span><span class="rec-item-date">8月13日 11:02</span></div>
+          <div class="rec-item"><span class="rec-item-game">舒尔特方格</span><span class="rec-item-diff">简单</span><span class="rec-item-time">00:10</span><span class="rec-item-date">8月13日 10:00</span></div>
+          <div class="rec-item"><span class="rec-item-game">连线游戏</span><span class="rec-item-diff">困难</span><span class="rec-item-time">00:45</span><span class="rec-item-date">8月12日 09:30</span></div>
+        </div>
+      </div>
+    </div>
+
+    <p style="text-align:center;color:#8a93a0;font-size:13px;">
+      预览使用真实 CSS 与布局；真机数据由本地 SQLite 自动记录。
+    </p>
+  </div>
+</body>
+</html>

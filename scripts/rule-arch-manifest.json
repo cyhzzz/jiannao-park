@@ -1,0 +1,49 @@
+{
+  "mirrors": ["AGENTS.md", "CLAUDE.md", ".workbuddy/memory/MEMORY.md"],
+  "max_lines": 220,
+  "max_bytes": 18000,
+  "required": [
+    "version.json",
+    "docs/rules/README.md",
+    "docs/rules/overview.md",
+    "docs/rules/business-invariants.md",
+    "docs/rules/frontend.md",
+    "docs/rules/toolchain.md",
+    "docs/rules/testing-and-delivery.md",
+    "docs/rules/workflows/feature.md",
+    "docs/rules/workflows/bugfix.md",
+    "docs/rules/templates/tech-spec.md",
+    "docs/jiannao_rule_build_prompt.md",
+    "scripts/pre-commit-check.ps1",
+    "scripts/check_rule_architecture.py",
+    ".github/workflows/rule-architecture.yml",
+    ".github/PULL_REQUEST_TEMPLATE.md"
+  ],
+  "root_references": [
+    "version.json",
+    "docs/rules/README.md",
+    "docs/rules/overview.md"
+  ],
+  "coverage": {
+    "docs/rules/business-invariants.md": ["www/ 是生成产物", "build-apk.ps1", "version.json", "老人"],
+    "docs/rules/overview.md": ["Capacitor", "根目录 Web 源"]
+  },
+  "prompt_markers": [
+    "Windows/PowerShell",
+    "单一权威源",
+    "非破坏迁移",
+    "可重复执行",
+    "未经用户明确授权",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "Cursor",
+    "Trae",
+    "GitHub Copilot"
+  ],
+  "integrations": {
+    "scripts/pre-commit-check.ps1": "python scripts/check_rule_architecture.py",
+    ".github/workflows/rule-architecture.yml": "python scripts/check_rule_architecture.py",
+    ".github/PULL_REQUEST_TEMPLATE.md": "python scripts/check_rule_architecture.py"
+  },
+  "prompt_glob": "docs/**/*prompt*.md"
+}

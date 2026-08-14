@@ -1,0 +1,33 @@
+name: rule-architecture
+
+on:
+  push:
+    paths:
+      - 'AGENTS.md'
+      - 'CLAUDE.md'
+      - '.workbuddy/memory/MEMORY.md'
+      - 'docs/rules/**'
+      - 'docs/**/*prompt*.md'
+      - 'scripts/check_rule_architecture.py'
+      - 'scripts/rule-arch-manifest.json'
+  pull_request:
+    paths:
+      - 'AGENTS.md'
+      - 'CLAUDE.md'
+      - '.workbuddy/memory/MEMORY.md'
+      - 'docs/rules/**'
+      - 'docs/**/*prompt*.md'
+      - 'scripts/check_rule_architecture.py'
+      - 'scripts/rule-arch-manifest.json'
+
+jobs:
+  check:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Rule architecture check
+        shell: pwsh
+        run: python scripts/check_rule_architecture.py
