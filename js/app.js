@@ -299,4 +299,20 @@
       window.GameSettings.setShowNextHint(toggleHint.checked);
     });
   }
+
+  // ====== 安卓系统返回键：等效于左上角返回按钮 ======
+  // 由原生 MainActivity 拦截系统/实体返回键后调用；返回 true 表示已在应用内处理（留在应用内），
+  // 返回 false 表示交由原生默认行为（首页时退出应用至桌面）。
+  // 这样系统返回键与游戏页/记录页左上角「← 返回」语义完全一致。
+  window.__onAndroidBack = function () {
+    // 完成弹窗优先关闭（留在游戏页，可再次按返回回首页）
+    if (!modal.classList.contains('hidden')) {
+      modal.classList.add('hidden');
+      return true;
+    }
+    if (gamePage.classList.contains('active')) { showHome(); return true; }
+    if (recordsPage.classList.contains('active')) { closeRecords(); return true; }
+    // 首页：不拦截，交由原生退出应用
+    return false;
+  };
 })();
