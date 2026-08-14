@@ -75,7 +75,7 @@
       }
     });
 
-    state = { diffs: cfg.diffs, found: 0, rightItems: right, cb, diffIdxs: idxs, foundIdxs: [], leftPanel, rightPanel };
+    state = { diffs: cfg.diffs, found: 0, rightItems: right, cb, diffIdxs: idxs, foundIdxs: [], leftPanel: null, rightPanel: null };
 
     canvas.innerHTML = '';
     const wrap = document.createElement('div');
@@ -99,6 +99,10 @@
     panels.appendChild(rightPanel);
     wrap.appendChild(panels);
     canvas.appendChild(wrap);
+
+    // 面板创建完成后再绑定到 state（避免 TDZ：const 声明晚于 state 初始化）
+    state.leftPanel = leftPanel;
+    state.rightPanel = rightPanel;
   }
 
   function handleClick(e, panel, cb) {
