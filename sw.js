@@ -1,6 +1,8 @@
 // 健脑乐园 Service Worker —— 离线缓存 Web 版全部资源
 // 仅浏览器环境注册（Capacitor 原生 App 内不注册，见 index.html 守卫）
-const CACHE = 'jiannao-v2';
+// 策略：网络优先（每次部署后立即拿到最新资源）+ 离线回退缓存
+//      缓存名随版本递增（v2→v3→…），新 SW 激活时自动清除旧缓存，避免旧资源残留
+const CACHE = 'jiannao-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -40,31 +42,21 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
 
-  // 导航请求：网络优先（确保 PWA 始终拿到最新页面），离线回退缓存
-  if (req.mode === 'navigate') {
-    event.respondWith(
-      fetch(req).then(res => {
-        if (res.ok) {
-          const copy = res.clone();
-          caches.open(CACHE).then(c => c.put(req, copy));
-        }
-        return res;
-      }).catch(() => caches.match('./index.html').then((r) => r || caches.match('./')))
-    );
-    return;
-  }
-
-  // 静态资源：缓存优先，缺失则网络拉取并补缓存
+  // 网络优先：始终尝试拉取最新资源（确保每次部署后立即生效），
+  // 仅在网络失败（离线）时回退到缓存；成功响应补入缓存以支撑离线可用。
   event.respondWith(
-    caches.match(req).then((cached) => {
-      if (cached) return cached;
-      return fetch(req).then((res) => {
+    fetch(req)
+      .then((res) => {
         if (res && res.ok && res.type === 'basic') {
           const copy = res.clone();
           caches.open(CACHE).then((c) => c.put(req, copy));
         }
         return res;
-      });
-    })
+      })
+      .catch(() =>
+        caches.match(req).then((cached) =>
+          cached || (req.mode === 'navigate' ? caches.match('./index.html') : undefined)
+        )
+      )
   );
 });

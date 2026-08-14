@@ -217,6 +217,13 @@
     if (!window.Capacitor && 'serviceWorker' in navigator) {
       window.addEventListener('load', function () {
         navigator.serviceWorker.register('sw.js').catch(function () {});
+        // 新版本 Service Worker 接管后自动重载一次，确保已安装的 PWA 立即拿到最新资源
+        var reloaded = false;
+        navigator.serviceWorker.addEventListener('controllerchange', function () {
+          if (reloaded) return;
+          reloaded = true;
+          window.location.reload();
+        });
       });
     }
   </script>
