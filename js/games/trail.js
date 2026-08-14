@@ -33,7 +33,15 @@
       node.className = 'trail-node';
       node.style.left = p.x + '%';
       node.style.top = p.y + '%';
-      node.textContent = i + 1;
+      // 圆点（可点击目标）
+      const dot = document.createElement('span');
+      dot.className = 'trail-dot';
+      // 数字标签（圆点上方）
+      const num = document.createElement('span');
+      num.className = 'trail-num';
+      num.textContent = i + 1;
+      node.appendChild(num);
+      node.appendChild(dot);
       node.dataset.idx = i + 1;
       if (i === 0) node.classList.add('next');
       node.addEventListener('click', () => handleClick(node, i + 1, cb));
@@ -49,7 +57,7 @@
     while (pts.length < count && attempts < 2000) {
       attempts++;
       const x = 12 + Math.random() * 76;
-      const y = 12 + Math.random() * 76;
+      const y = 18 + Math.random() * 64;
       let ok = true;
       for (const p of pts) {
         if (Math.hypot(p.x - x, p.y - y) < 16) { ok = false; break; }
@@ -58,7 +66,7 @@
     }
     // 若重叠未排满，直接补位
     while (pts.length < count) {
-      pts.push({ x: 12 + Math.random() * 76, y: 12 + Math.random() * 76 });
+      pts.push({ x: 12 + Math.random() * 76, y: 18 + Math.random() * 64 });
     }
     return pts;
   }

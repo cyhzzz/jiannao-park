@@ -1,6 +1,6 @@
 // 健脑乐园 Service Worker —— 离线缓存 Web 版全部资源
 // 仅浏览器环境注册（Capacitor 原生 App 内不注册，见 index.html 守卫）
-const CACHE = 'jiannao-v1';
+const CACHE = 'jiannao-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -40,10 +40,16 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
 
-  // 导航请求：缓存优先，未命中回退到已缓存的首页（离线可用）
+  // 导航请求：网络优先（确保 PWA 始终拿到最新页面），离线回退缓存
   if (req.mode === 'navigate') {
     event.respondWith(
-      fetch(req).catch(() => caches.match('./index.html').then((r) => r || caches.match('./')))
+      fetch(req).then(res => {
+        if (res.ok) {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(req, copy));
+        }
+        return res;
+      }).catch(() => caches.match('./index.html').then((r) => r || caches.match('./')))
     );
     return;
   }

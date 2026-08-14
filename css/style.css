@@ -29,11 +29,12 @@
 
 html, body {
   height: 100%;
-  background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+  background-color: #f4f6f9;
+  background-image: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
   color: var(--text-main);
   font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
   font-size: 18px;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 #app, body > div {
@@ -615,30 +616,46 @@ html, body {
 }
 .trail-node {
   position: absolute;
-  width: 13%;
-  height: 13%;
+  width: 14%;
+  height: 20%;
   transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;   /* 圆点在底部，数字在上方 */
+  cursor: pointer;
+}
+.trail-dot {
+  width: 100%;
+  aspect-ratio: 1 / 1;
   border-radius: 50%;
   background: var(--accent-soft);
-  color: var(--accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: clamp(16px, 4.5vw, 26px);
-  font-weight: 700;
-  cursor: pointer;
   border: 3px solid transparent;
   transition: all 0.12s ease;
 }
-.trail-node.next {
+.trail-num {
+  font-size: clamp(13px, 3.5vw, 20px);
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1.1;
+  margin-bottom: 2px;
+  white-space: nowrap;
+}
+.trail-node.next .trail-dot {
   border-color: var(--accent);
   background: var(--accent);
+}
+.trail-node.next .trail-num {
   color: #fff;
 }
-.trail-node.done {
+.trail-node.done .trail-dot {
   background: var(--success-soft);
-  color: var(--success);
   border-color: var(--success);
+}
+.trail-node.done .trail-num {
+  color: var(--success);
+}
+.trail-node.done {
   pointer-events: none;
 }
 

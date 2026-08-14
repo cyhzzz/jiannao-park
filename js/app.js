@@ -30,6 +30,7 @@
     home.classList.add('active');
     stopTimer();
     resetGameUI();
+    modal.classList.add('hidden');   // 防弹窗残留
   }
 
   function openGame(gameKey) {
@@ -111,6 +112,7 @@
       diffPanel.classList.add('hidden');
       infoBar.classList.remove('hidden');
       controls.classList.remove('hidden');
+      modal.classList.add('hidden');   // 防弹窗残留
       // 不同游戏的初始提示语
       const hintMap = {
         schulte: '按顺序从 1 点起',
