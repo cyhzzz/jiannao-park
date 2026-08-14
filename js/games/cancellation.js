@@ -38,10 +38,13 @@
     };
 
     canvas.innerHTML = '';
+    const wrap = document.createElement('div');
+    wrap.className = 'cancel-wrap';
+
     const targetHint = document.createElement('div');
     targetHint.className = 'cancel-target';
     targetHint.innerHTML = '请划掉所有的 ' + targets.map((t) => `<b>${t}</b>`).join('、');
-    canvas.appendChild(targetHint);
+    wrap.appendChild(targetHint);
 
     const board = document.createElement('div');
     board.className = 'cancel-board';
@@ -56,7 +59,8 @@
       board.appendChild(cell);
     });
 
-    canvas.appendChild(board);
+    wrap.appendChild(board);
+    canvas.appendChild(wrap);
   }
 
   function handleClick(cell, n, cb) {

@@ -489,6 +489,14 @@ html, body {
 }
 
 /* ========== 数字划消 ========== */
+.cancel-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 460px;
+}
+
 .cancel-board {
   display: grid;
   gap: 7px;
