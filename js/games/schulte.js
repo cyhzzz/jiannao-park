@@ -21,8 +21,9 @@
     const size = CONFIG[difficulty].size;
     const total = size * size;
     const nums = shuffle(Array.from({ length: total }, (_, i) => i + 1));
+    const showHint = window.GameSettings ? window.GameSettings.showNextHint() : false;
 
-    state = { size, total, next: 1, cb };
+    state = { size, total, next: 1, cb, showHint, wrongStreak: 0 };
 
     canvas.innerHTML = '';
     const board = document.createElement('div');
@@ -34,7 +35,7 @@
       cell.className = 'schulte-cell';
       cell.textContent = n;
       cell.dataset.val = n;
-      if (n === 1) cell.classList.add('current');
+      if (n === 1 && showHint) cell.classList.add('current');
       cell.addEventListener('click', () => handleClick(cell, n, cb));
       board.appendChild(cell);
     });
@@ -44,24 +45,36 @@
 
   function handleClick(cell, n, cb) {
     if (state.next !== n) {
-      // 点错：抖动提示，不计惩罚但需点正确数字
+      // 点错：抖动提示；连续点错达到阈值时一次性高亮正确目标，帮助脱困
       cell.classList.remove('wrong');
       void cell.offsetWidth;
       cell.classList.add('wrong');
+      state.wrongStreak++;
+      if (state.wrongStreak >= 3) {
+        const target = canvas_queryNext(state.next);
+        if (target) {
+          target.classList.add('hint');
+          setTimeout(() => target.classList.remove('hint'), 1300);
+        }
+        state.wrongStreak = 0;
+      }
       return;
     }
     cell.classList.add('done');
     cell.classList.remove('current');
     state.next++;
+    state.wrongStreak = 0;
     cb.onProgress(state.next - 1, state.total);
 
     if (state.next > state.total) {
       cb.onComplete();
       return;
     }
-    // 高亮下一个目标
-    const nextCell = canvas_queryNext(state.next);
-    if (nextCell) nextCell.classList.add('current');
+    // 仅在开启「显示下一步提示」时全程高亮下一个目标
+    if (state.showHint) {
+      const nextCell = canvas_queryNext(state.next);
+      if (nextCell) nextCell.classList.add('current');
+    }
   }
 
   function canvas_queryNext(val) {

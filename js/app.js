@@ -2,6 +2,17 @@
 (function () {
   const $ = (sel) => document.querySelector(sel);
 
+  // 全局设置（持久化到 localStorage，默认关闭「显示下一步提示」）
+  window.GameSettings = {
+    KEY: 'jiannao_show_next_hint',
+    showNextHint() {
+      try { return localStorage.getItem(this.KEY) === '1'; } catch (e) { return false; }
+    },
+    setShowNextHint(v) {
+      try { localStorage.setItem(this.KEY, v ? '1' : '0'); } catch (e) {}
+    },
+  };
+
   // 初始化本地 SQLite 记录库（在 WebView 内运行，失败自动降级，不阻断游戏）
   if (window.DB) window.DB.init();
   const home = $('#page-home');
@@ -273,4 +284,13 @@
   window.addEventListener('error', (e) => {
     console.error('[global error]', e.error || e.message);
   });
+
+  // 难度页「显示下一步提示」开关：初始化勾选状态 + 变更持久化
+  const toggleHint = $('#toggle-hint');
+  if (toggleHint) {
+    toggleHint.checked = window.GameSettings.showNextHint();
+    toggleHint.addEventListener('change', () => {
+      window.GameSettings.setShowNextHint(toggleHint.checked);
+    });
+  }
 })();

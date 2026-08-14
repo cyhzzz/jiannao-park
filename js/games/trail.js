@@ -11,7 +11,8 @@
 
   function start(canvas, difficulty, cb) {
     const count = CONFIG[difficulty].count;
-    state = { count, next: 1, cb, svg: null, positions: [] };
+    const showHint = window.GameSettings ? window.GameSettings.showNextHint() : false;
+    state = { count, next: 1, cb, svg: null, positions: [], showHint, wrongStreak: 0 };
 
     canvas.innerHTML = '';
     const wrap = document.createElement('div');
@@ -43,7 +44,7 @@
       node.appendChild(num);
       node.appendChild(dot);
       node.dataset.idx = i + 1;
-      if (i === 0) node.classList.add('next');
+      if (i === 0 && showHint) node.classList.add('next');
       node.addEventListener('click', () => handleClick(node, i + 1, cb));
       wrap.appendChild(node);
     });
@@ -76,11 +77,22 @@
       node.classList.remove('wrong');
       void node.offsetWidth;
       node.classList.add('wrong');
+      // 连续点错达到阈值时，一次性高亮正确目标帮助脱困
+      state.wrongStreak++;
+      if (state.wrongStreak >= 3) {
+        const target = document.querySelector(`.trail-node[data-idx="${state.next}"]`);
+        if (target) {
+          target.classList.add('hint');
+          setTimeout(() => target.classList.remove('hint'), 1300);
+        }
+        state.wrongStreak = 0;
+      }
       return;
     }
     node.classList.add('done');
     node.classList.remove('next');
     state.next++;
+    state.wrongStreak = 0;
 
     // 画连线：连接第 (idx-1) 个节点到第 idx 个节点（首节点无需连线）
     if (idx > 1) {
@@ -92,8 +104,11 @@
     cb.onProgress(state.next - 1, state.count);
     if (state.next > state.count) { cb.onComplete(); return; }
 
-    const nextNode = document.querySelector(`.trail-node[data-idx="${state.next}"]`);
-    if (nextNode) nextNode.classList.add('next');
+    // 仅在开启「显示下一步提示」时全程高亮下一个节点
+    if (state.showHint) {
+      const nextNode = document.querySelector(`.trail-node[data-idx="${state.next}"]`);
+      if (nextNode) nextNode.classList.add('next');
+    }
   }
 
   function drawLine(a, b) {
