@@ -12,6 +12,8 @@
       try { localStorage.setItem(this.KEY, v ? '1' : '0'); } catch (e) {}
     },
   };
+  // 仅这些有序引导游戏受「显示下一步提示」开关影响；翻牌/找不同内部无引导，难度页不显示该开关
+  const HINT_GAMES = ['schulte', 'cancellation', 'trail'];
 
   // 初始化本地 SQLite 记录库（在 WebView 内运行，失败自动降级，不阻断游戏）
   if (window.DB) window.DB.init();
@@ -61,6 +63,10 @@
     canvas.style.display = 'flex';
     document.querySelectorAll('.diff-btn').forEach((b) => b.classList.remove('selected'));
     renderScience(gameKey);
+
+    // 「显示下一步提示」开关仅对受影响游戏显示；翻牌/找不同内部无引导，难度页不显示该开关
+    const settingRow = $('.setting-row');
+    if (settingRow) settingRow.classList.toggle('hidden', !HINT_GAMES.includes(gameKey));
   }
 
   // ====== 训练科普面板（难度页下方）======
