@@ -530,6 +530,12 @@ html, body {
   margin-bottom: 12px;
   color: var(--text-sub);
 }
+.cancel-cell.target-hint {
+  background: var(--accent-soft);
+  color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
 .cancel-target b {
   color: var(--accent);
   font-size: 24px;
@@ -655,7 +661,7 @@ html, body {
   background: var(--accent);
 }
 .trail-node.next .trail-num {
-  color: #fff;
+  color: var(--accent-deep);
 }
 .trail-node.done .trail-dot {
   background: var(--success-soft);
@@ -830,7 +836,7 @@ html, body {
   background: var(--warn);
   animation: hintPulse 0.7s ease-in-out 2;
 }
-.trail-node.hint .trail-num { color: #fff; }
+.trail-node.hint .trail-num { color: var(--warn); }
 @keyframes hintPulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.12); }

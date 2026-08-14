@@ -15,6 +15,7 @@
     const pool = Array.from({ length: 9 }, (_, i) => i + 1);
     shuffle(pool);
     const targets = pool.slice(0, cfg.targets).sort((a, b) => a - b);
+    const showHint = window.GameSettings ? window.GameSettings.showNextHint() : false;
 
     // 生成棋盘，保证每个目标至少出现 2 次
     const total = cfg.rows * cfg.cols;
@@ -35,6 +36,7 @@
       }, 0),
       foundCount: 0,
       cb,
+      showHint,
     };
 
     canvas.innerHTML = '';
@@ -55,6 +57,7 @@
       cell.className = 'cancel-cell';
       cell.textContent = n;
       cell.dataset.val = n;
+      if (showHint && targets.includes(n)) cell.classList.add('target-hint');
       cell.addEventListener('click', () => handleClick(cell, n, cb));
       board.appendChild(cell);
     });
@@ -73,6 +76,7 @@
     }
     if (cell.classList.contains('marked')) return;
     cell.classList.add('marked');
+    cell.classList.remove('target-hint');
     state.foundCount++;
     cb.onProgress(state.foundCount, state.totalTargets);
 
